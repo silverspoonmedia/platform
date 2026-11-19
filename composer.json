@@ -3,7 +3,7 @@
     "description": "Silverspoon shared kernel: Support, the Identity hub, HTTP glue, repositories and the platform providers.",
     "type": "library",
     "license": "proprietary",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "homepage": "https://github.com/silverspoonmedia/platform",
     "support": {
         "source": "https://github.com/silverspoonmedia/platform"
