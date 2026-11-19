@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Pagination\LengthAwarePaginator;
 use InvalidArgumentException;
 
@@ -61,7 +62,16 @@ class EloquentCrudRepository implements EloquentCrudRepositoryInterface
     public function restore(string|Model $model, mixed $id): bool
     {
         $this->assertSoftDeletes($model);
-        $record = $this->newQuery($model)->withTrashed()->findOrFail($id);
+        $record = $this->newQuery($model)
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->findOrFail($id);
+
+        // Non-null only because assertSoftDeletes() guarantees the trait.
+        if (! method_exists($record, 'restore')) {
+            throw new InvalidArgumentException(
+                sprintf('Model %s does not use the SoftDeletes trait.', $this->resolveClass($model)),
+            );
+        }
 
         return (bool) $record->restore();
     }
@@ -69,7 +79,9 @@ class EloquentCrudRepository implements EloquentCrudRepositoryInterface
     public function forceDelete(string|Model $model, mixed $id): bool
     {
         $this->assertSoftDeletes($model);
-        $record = $this->newQuery($model)->withTrashed()->findOrFail($id);
+        $record = $this->newQuery($model)
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->findOrFail($id);
 
         return (bool) $record->forceDelete();
     }
@@ -78,7 +90,23 @@ class EloquentCrudRepository implements EloquentCrudRepositoryInterface
     {
         $this->assertSoftDeletes($model);
 
-        return $this->newQuery($model)->onlyTrashed()->get($columns);
+        // `onlyTrashed()` is a SoftDeletes macro Larastan resolves only on a
+        // concrete model builder; dropping the global scope by name is the
+        // same query and stays type-checkable on the generic builder.
+        return $this->newQuery($model)
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->whereNotNull($this->resolveDeletedAtColumn($model))
+            ->get($columns);
+    }
+
+    private function resolveDeletedAtColumn(string|Model $model): string
+    {
+        $instance = $model instanceof Model ? $model : new $model;
+
+        /** @var string $column */
+        $column = $instance->getQualifiedDeletedAtColumn();
+
+        return $column;
     }
 
     public function query(string|Model $model): Builder
@@ -127,7 +155,10 @@ class EloquentCrudRepository implements EloquentCrudRepositoryInterface
     {
         $instance = $model instanceof Model ? $model : new $model;
 
-        return $instance->newQuery();
+        /** @var Builder<Model> $query */
+        $query = $instance->newQuery();
+
+        return $query;
     }
 
     private function assertSoftDeletes(string|Model $model): void

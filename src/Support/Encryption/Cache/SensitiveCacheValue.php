@@ -42,7 +42,7 @@ class SensitiveCacheValue
         }
 
         if (! EncryptedEnvelope::isEnvelopeJson($value)) {
-            return is_array($value) ? $value : json_decode($value, true);
+            return json_decode($value, true);
         }
 
         $json = $this->encryption->decrypt($value, $this->context($key));

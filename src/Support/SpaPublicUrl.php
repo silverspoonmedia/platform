@@ -113,7 +113,7 @@ final class SpaPublicUrl
 
         $cut = strpos($path, '?');
         $pathname = $cut === false ? $path : substr($path, 0, $cut);
-        if ($pathname === false || $pathname === '') {
+        if ($pathname === '') {
             throw new InvalidArgumentException('Invalid SPA public URL path.');
         }
 

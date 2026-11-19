@@ -577,6 +577,7 @@ class UninstallManifest
         $slug = $this->domains->slug($name);
         $hits = $this->scanner->hitsByFile($name);
         $repos = [];
+        $draftData = $this->draftData($name, $slug);
 
         foreach (UninstallReferenceScanner::REPOS as $repo) {
             $root = $this->scanner->root($repo);
@@ -598,7 +599,6 @@ class UninstallManifest
 
             $edits = [];
             $unresolved = [];
-            $draftData = $this->draftData($name, $slug);
 
             foreach ($hits[$repo] ?? [] as $relative => $lines) {
                 if ($this->scanner->pathCoveredBy($relative, $delete) || $this->scanner->isStructuralFile($relative)) {

@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\Rbac\RoleService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Select2 lookups for the SPA (`/api/v1/lookups/*`).
@@ -99,6 +100,7 @@ class LookupService
             return $this->emptyPage(false);
         }
 
+        /** @var Collection<int, User> $users */
         $users = $this->usersVisibleToActorQuery($actorLevel)
             ->whereIn('id', $ids)
             ->orderBy('name')
@@ -137,6 +139,8 @@ class LookupService
     private function paginateUsers(Builder $query, int $page, int $perPage): array
     {
         $offset = ($page - 1) * $perPage;
+
+        /** @var Collection<int, User> $rows */
         $rows = (clone $query)->skip($offset)->take($perPage + 1)->get();
         $more = $rows->count() > $perPage;
 
@@ -157,7 +161,8 @@ class LookupService
         $rolesTable = config('permission.table_names.roles', 'roles');
         $pivotTable = config('permission.table_names.model_has_roles', 'model_has_roles');
 
-        return User::query()
+        /** @var Builder<User> $query */
+        $query = User::query()
             ->whereIn('id', function ($query) use ($actorLevel, $userModel, $morphKey, $rolesTable, $pivotTable): void {
                 $query->select($pivotTable.'.'.$morphKey)
                     ->from($pivotTable)
@@ -168,6 +173,8 @@ class LookupService
                     ->groupBy("{$pivotTable}.{$morphKey}")
                     ->havingRaw('MIN('.$rolesTable.'.level) >= ?', [$actorLevel]);
             });
+
+        return $query;
     }
 
     /**

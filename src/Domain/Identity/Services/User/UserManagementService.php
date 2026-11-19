@@ -8,7 +8,6 @@ use App\Domain\Identity\Services\Rbac\RoleService;
 use App\Domain\Identity\Support\RbacRealtime;
 use App\Support\ListActions\NavigationTreeFlusher;
 use App\Support\Notifications\Contracts\NotificationDispatcher;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator as LengthAwarePaginatorConcrete;
 use Illuminate\Support\Arr;
@@ -37,9 +36,9 @@ class UserManagementService
     }
 
     /**
-     * @return LengthAwarePaginator<int, User>
+     * @return LengthAwarePaginatorConcrete<int, User>
      */
-    public function paginate(User $actor, int $perPage, int $page): LengthAwarePaginator
+    public function paginate(User $actor, int $perPage, int $page): LengthAwarePaginatorConcrete
     {
         $actorLevel = $this->roleService->getLowestRoleLevel($actor);
 
@@ -122,8 +121,10 @@ class UserManagementService
 
         $user = $this->users->update($id, $attributes);
 
+        $this->realtime->userListChanged('updated', (string) $user->id);
+
         if (isset($data['role'])) {
-            $previousRole = $user->roles->first()?->name;
+            $previousRole = $this->firstRoleName($user);
             $user->syncRoles([$data['role']]);
 
             if (app()->bound(NavigationTreeFlusher::class)) {
@@ -202,6 +203,18 @@ class UserManagementService
                 'actor' => $actor->name,
             ],
         );
+    }
+
+    /**
+     * Name of the user's first assigned role, or null when they hold none.
+     * Read through the relation query so the pivot model never has to declare
+     * the `name` column of the related table.
+     */
+    private function firstRoleName(User $user): ?string
+    {
+        $name = $user->roles()->value('name');
+
+        return $name === null ? null : (string) $name;
     }
 
     private function assertRoleAssignable(User $actor, string $roleName): void

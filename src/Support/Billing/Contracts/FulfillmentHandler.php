@@ -46,7 +46,7 @@ interface FulfillmentHandler
      * Fixed days exist so entitlement length and the unused-gap credit math use
      * one period definition instead of drifting apart.
      */
-    public function fixedPeriodDays(): ?int;
+    public function fixedPeriodDays(): int;
 
     /**
      * Reject a checkout before money moves.

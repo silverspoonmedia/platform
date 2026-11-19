@@ -21,6 +21,12 @@ use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property string $name
+ * @property string $email
+ * @property string|null $locale
+ * @property string $guard_name
+ */
 #[Fillable(['name', 'email', 'locale', 'password', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, JWTSubject, MustVerifyEmail

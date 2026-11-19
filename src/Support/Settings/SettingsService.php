@@ -9,7 +9,6 @@ final class SettingsService
 {
     public function __construct(
         private readonly SystemSettingRepositoryInterface $repository,
-        private readonly SettingsReader $reader,
     ) {}
 
     /**

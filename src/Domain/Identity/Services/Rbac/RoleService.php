@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Spatie\Permission\Guard;
 
 class RoleService
 {
@@ -63,7 +64,7 @@ class RoleService
 
         return Role::query()
             ->core()
-            ->where('guard_name', $actor->guard_name ?? 'api')
+            ->where('guard_name', Guard::getDefaultName($actor))
             ->where('level', '>', $actorLevel)
             ->orderBy('level')
             ->get();

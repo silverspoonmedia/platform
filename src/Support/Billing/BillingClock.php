@@ -37,7 +37,7 @@ final class BillingClock
 
         $days = $handler->fixedPeriodDays();
 
-        return $days !== null && $days > 0 ? $days : null;
+        return $days > 0 ? $days : null;
     }
 
     /**

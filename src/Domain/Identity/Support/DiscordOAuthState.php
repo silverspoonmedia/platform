@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Crypt;
 final class DiscordOAuthState
 {
     /**
-     * @return array{user_id: string, intent: string, return_to?: string}
+     * Returns a `Crypt`-encrypted opaque token (base64 envelope), not the
+     * plaintext payload — decode with {@see self::decode()}.
      */
     public static function encode(
         string $userId,
@@ -27,7 +28,7 @@ final class DiscordOAuthState
     }
 
     /**
-     * @return array{user_id: string, intent: string, return_to?: string}
+     * @return array{user_id: string, intent: string, return_to: string|null}
      */
     public static function decode(string $state): array
     {

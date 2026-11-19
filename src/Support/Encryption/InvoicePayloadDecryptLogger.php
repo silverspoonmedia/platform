@@ -70,7 +70,7 @@ class InvoicePayloadDecryptLogger
             }
 
             if (str_starts_with($class, 'App\\')) {
-                return $class.($frame['type'] ?? '').($frame['function'] ?? '');
+                return $class.($frame['type'] ?? '').$frame['function'];
             }
         }
 

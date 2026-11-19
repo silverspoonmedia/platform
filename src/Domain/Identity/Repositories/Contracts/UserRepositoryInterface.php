@@ -3,8 +3,8 @@
 namespace App\Domain\Identity\Repositories\Contracts;
 
 use App\Domain\Identity\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface UserRepositoryInterface
 {

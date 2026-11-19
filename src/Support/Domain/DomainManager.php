@@ -139,7 +139,7 @@ class DomainManager
             return false;
         }
 
-        return (bool) ($all[$name]['locked'] ?? false);
+        return $all[$name]['locked'];
     }
 
     /**
@@ -158,7 +158,7 @@ class DomainManager
             return 'product';
         }
 
-        $kind = $all[$name]['kind'] ?? 'product';
+        $kind = $all[$name]['kind'];
 
         return $kind === 'core' ? 'core' : 'product';
     }
@@ -185,10 +185,10 @@ class DomainManager
     {
         $parent = $this->normalizeName($parent);
 
-        return array_values(array_keys(array_filter(
+        return array_keys(array_filter(
             $this->all(),
             static fn (array $meta): bool => $meta['parent'] === $parent
-        )));
+        ));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
@@ -26,7 +27,7 @@ class OptionalJwtAuthenticate
         try {
             $user = JWTAuth::parseToken()->authenticate();
 
-            if ($user) {
+            if ($user instanceof Authenticatable) {
                 Auth::guard('api')->setUser($user);
             }
         } catch (JWTException) {

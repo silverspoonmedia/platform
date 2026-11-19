@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
+use PHPOpenSourceSaver\JWTAuth\JWT;
 use PHPOpenSourceSaver\JWTAuth\JWTGuard;
 
 class AuthService
@@ -40,6 +41,7 @@ class AuthService
         private readonly SensitiveCacheValue $sensitiveCache,
         private readonly ProductActivationService $productActivations,
         private readonly AuthLoginThrottle $loginThrottle,
+        private readonly JWT $jwt,
     ) {}
 
     /**
@@ -285,8 +287,9 @@ class AuthService
             Auth::forgetGuards();
             $guard = $this->guard();
             $guard->setTTL($ttlMinutes);
+            $this->jwt->customClaims($this->customClaims((bool) $challenge['remember']));
 
-            $token = $guard->login($user, $this->customClaims((bool) $challenge['remember']));
+            $token = $guard->login($user);
 
             return $this->buildAuthPayload($user, $token, $ttlMinutes, (bool) $challenge['remember']);
         });
@@ -402,7 +405,8 @@ class AuthService
                 Auth::forgetGuards();
                 $guard = $this->guard();
                 $guard->setTTL($ttlMinutes ?? $ttl);
-                $token = $guard->login($user, $this->customClaims($remember));
+                $this->jwt->customClaims($this->customClaims($remember));
+                $token = $guard->login($user);
                 $actualTtl = $ttlMinutes ?? $guard->getTTL() ?? $this->defaultTtlMinutes();
 
                 return [
