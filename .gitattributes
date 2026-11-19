@@ -1,0 +1,5 @@
+# Distribution hygiene for the published mirror (silverspoonmedia/platform).
+# Composer installs from the mirror's tags; tests never ship to a host.
+/tests export-ignore
+/.github export-ignore
+/.gitattributes export-ignore
