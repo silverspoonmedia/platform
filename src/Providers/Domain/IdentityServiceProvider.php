@@ -22,6 +22,13 @@ class IdentityServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, UserPolicy::class);
 
+        // Identity's translations ship inside this package (`resources/lang`):
+        // `api/auth.*`, `api/users.*`, `api/identity.*`, `forms/users.*`. The
+        // loader keeps the host's `lang/` first, so a host copy still wins and
+        // this only fills what the kernel owns. Without it a consumer installs
+        // the kernel and renders every auth message as its raw key.
+        $this->app['translator']->getLoader()->addPath(__DIR__.'/../../../resources/lang');
+
         // A subscriber, not a `handle*` listener: framework event discovery only
         // finds `handle*` methods, so the file-log auth trail registers here.
         Event::subscribe(LogAuthenticationEvents::class);

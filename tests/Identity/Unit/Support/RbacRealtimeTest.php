@@ -4,8 +4,8 @@ namespace App\Domain\Identity\Tests\Unit\Support;
 
 use App\Domain\Identity\Events\RolePermissionChanged;
 use App\Domain\Identity\Support\RbacRealtime;
+use App\Domain\Identity\Tests\TestCase;
 use Illuminate\Support\Facades\Event;
-use Tests\TestCase;
 
 class RbacRealtimeTest extends TestCase
 {

@@ -4,13 +4,10 @@ namespace App\Domain\Identity\Tests\Unit\Repositories\Eloquent;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Repositories\Eloquent\UserRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Domain\Identity\Tests\TestCase;
 
 class UserRepositoryTest extends TestCase
 {
-    use RefreshDatabase;
-
     private UserRepository $repository;
 
     protected function setUp(): void

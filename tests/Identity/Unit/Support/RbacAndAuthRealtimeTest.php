@@ -9,10 +9,9 @@ use App\Domain\Identity\Events\UserListChanged;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Support\AuthStateBroadcast;
 use App\Domain\Identity\Support\RbacRealtime;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Domain\Identity\Tests\TestCase;
+use App\Support\Testing\Concerns\SeedsRolesAndPermissions;
 use Illuminate\Support\Facades\Event;
-use Tests\Concerns\SeedsRolesAndPermissions;
-use Tests\TestCase;
 
 /**
  * Covers the RbacRealtime list-ping extensions (UserListChanged/RoleListChanged)
@@ -20,7 +19,6 @@ use Tests\TestCase;
  */
 class RbacAndAuthRealtimeTest extends TestCase
 {
-    use RefreshDatabase;
     use SeedsRolesAndPermissions;
 
     protected function setUp(): void

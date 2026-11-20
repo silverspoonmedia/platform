@@ -2,17 +2,14 @@
 
 namespace App\Domain\Identity\Tests\Unit\Database\Seeders;
 
+use App\Domain\Identity\Database\Seeders\RoleSeeder;
 use App\Domain\Identity\Enums\DomainKind;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
-use Database\Seeders\RoleSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Domain\Identity\Tests\TestCase;
 
 class RoleSeederDomainKindTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_role_seeder_sets_domain_kind_core_on_all_roles_and_permissions(): void
     {
         $this->seed(RoleSeeder::class);

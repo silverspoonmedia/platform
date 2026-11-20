@@ -7,15 +7,12 @@ use App\Domain\Identity\Exceptions\Auth\InvalidPasswordResetTokenException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Repositories\Eloquent\UserRepository;
 use App\Domain\Identity\Services\Auth\PasswordResetService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Domain\Identity\Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Tests\TestCase;
 
 class PasswordResetServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private PasswordResetService $service;
 
     protected function setUp(): void

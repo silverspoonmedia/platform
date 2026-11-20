@@ -4,8 +4,8 @@ namespace App\Domain\Identity\Tests\Unit\Support;
 
 use App\Domain\Identity\Exceptions\IdentityOAuthException;
 use App\Domain\Identity\Support\OAuthReturnUrl;
+use App\Domain\Identity\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class OAuthReturnUrlTest extends TestCase
 {

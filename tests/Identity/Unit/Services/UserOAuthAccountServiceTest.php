@@ -6,15 +6,12 @@ use App\Domain\Identity\Enums\OAuthProvider;
 use App\Domain\Identity\Models\IdentityOAuthAccount;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\UserOAuthAccountService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Domain\Identity\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class UserOAuthAccountServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private UserOAuthAccountService $oauthAccounts;
 
     protected function setUp(): void

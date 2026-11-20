@@ -5,14 +5,12 @@ namespace App\Domain\Identity\Tests\Unit\Services\Auth;
 use App\Domain\Identity\Exceptions\Auth\InvalidCredentialsException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\Auth\AuthService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Domain\Identity\Tests\TestCase;
+use App\Support\Testing\Concerns\SeedsRolesAndPermissions;
 use Illuminate\Support\Facades\Hash;
-use Tests\Concerns\SeedsRolesAndPermissions;
-use Tests\TestCase;
 
 class AuthServiceTest extends TestCase
 {
-    use RefreshDatabase;
     use SeedsRolesAndPermissions;
 
     private AuthService $service;

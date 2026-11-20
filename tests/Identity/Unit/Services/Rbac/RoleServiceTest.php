@@ -6,13 +6,11 @@ use App\Domain\Identity\Enums\DomainKind;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\Rbac\RoleService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Concerns\SeedsRolesAndPermissions;
-use Tests\TestCase;
+use App\Domain\Identity\Tests\TestCase;
+use App\Support\Testing\Concerns\SeedsRolesAndPermissions;
 
 class RoleServiceTest extends TestCase
 {
-    use RefreshDatabase;
     use SeedsRolesAndPermissions;
 
     private RoleService $service;
@@ -22,6 +20,13 @@ class RoleServiceTest extends TestCase
         parent::setUp();
 
         $this->seedRolesAndPermissions();
+
+        // `users` and the pivots are kernel-wide and shared across the process;
+        // a prior test left rows behind, and the seeded ladder is reused by
+        // `updateOrCreate`. Start each test from empty user/pivot tables.
+        $this->truncateTables('users', 'model_has_roles', 'model_has_permissions', 'roles', 'permissions', 'role_has_permissions');
+        $this->seedRolesAndPermissions();
+
         $this->service = app(RoleService::class);
     }
 

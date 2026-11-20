@@ -6,13 +6,10 @@ use App\Domain\Identity\Exceptions\Auth\EmailAlreadyVerifiedException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Repositories\Eloquent\UserRepository;
 use App\Domain\Identity\Services\Auth\EmailVerificationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Domain\Identity\Tests\TestCase;
 
 class EmailVerificationServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private EmailVerificationService $service;
 
     protected function setUp(): void

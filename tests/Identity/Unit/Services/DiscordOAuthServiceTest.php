@@ -3,8 +3,8 @@
 namespace App\Domain\Identity\Tests\Unit\Services;
 
 use App\Domain\Identity\Services\DiscordOAuthService;
+use App\Domain\Identity\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class DiscordOAuthServiceTest extends TestCase
 {
@@ -71,11 +71,18 @@ class DiscordOAuthServiceTest extends TestCase
     }
 
     #[Test]
-    public function services_config_defaults_redirect_from_app_url_when_env_empty(): void
+    public function services_config_redirect_follows_env_override_then_app_url(): void
     {
-        $this->assertSame(
-            rtrim((string) config('app.url'), '/').'/apps/auth/discord/callback',
-            config('services.discord.redirect'),
-        );
+        // The rule has two branches: `DISCORD_REDIRECT_URI` wins when it is set,
+        // otherwise the callback is derived from `app.url`. A developer machine's
+        // `.env` ships the override (`${APP_URL}/apps/auth/discord/callback`), a
+        // standalone Testbench run ships neither — both must resolve.
+        $override = (string) env('DISCORD_REDIRECT_URI', '');
+
+        $expected = $override !== ''
+            ? $override
+            : rtrim((string) config('app.url'), '/').'/apps/auth/discord/callback';
+
+        $this->assertSame($expected, config('services.discord.redirect'));
     }
 }

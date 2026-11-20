@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="platform">
+            <directory>tests/Identity</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_KEY" value="base64:2fl+KtvkdphvQyEfmNqD2aE7nKj8vR3xW5yZ1aB4cD8="/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="APP_NOTIFICATION_TYPE" value="polling"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="JWT_SECRET" value="testing-jwt-secret-key-with-enough-length"/>
+        <env name="AUTH_GUARD" value="api"/>
+        <env name="AUTH_DEFAULT_ROLE" value="User"/>
+        <env name="HCAPTCHA_ENABLED" value="false"/>
+        <env name="ENCRYPTION_KMS_ENABLED" value="false"/>
+        <env name="ENCRYPTION_BLIND_INDEX_PEPPER" value="testing-blind-index-pepper"/>
+        <env name="ENCRYPTION_DECRYPTED_CACHE_MAX_TTL" value="60"/>
+        <env name="ENCRYPTION_SESSION_ENABLED" value="false"/>
+    </php>
+</phpunit>

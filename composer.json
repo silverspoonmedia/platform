@@ -11,15 +11,21 @@
     "require": {
         "php": "^8.4",
         "aws/aws-sdk-php": "^3.0",
+        "chillerlan/php-qrcode": "^4.4",
         "fruitcake/php-cors": "^1.3",
         "laravel/framework": "^13.0",
         "league/flysystem-aws-s3-v3": "3.*",
         "nesbot/carbon": "^3.0",
         "php-open-source-saver/jwt-auth": "^2.9",
+        "pragmarx/google2fa-laravel": "^3.0",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^8.0",
         "symfony/http-foundation": "^8.0",
         "symfony/mime": "^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^12.5"
     },
     "autoload": {
         "psr-4": {
@@ -35,6 +41,11 @@
         },
         "files": [
             "src/Support/Settings/helpers.php"
+        ]
+    },
+    "scripts": {
+        "test": [
+            "@php vendor/bin/phpunit"
         ]
     },
     "extra": {

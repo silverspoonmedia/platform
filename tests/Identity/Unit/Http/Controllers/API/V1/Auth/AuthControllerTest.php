@@ -6,11 +6,11 @@ use App\Domain\Identity\Http\Controllers\API\V1\Auth\AuthController;
 use App\Domain\Identity\Http\Requests\Auth\LoginRequest;
 use App\Domain\Identity\Http\Requests\Auth\RegisterRequest;
 use App\Domain\Identity\Services\Auth\AuthService;
+use App\Domain\Identity\Tests\TestCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Testing\TestResponse;
 use Mockery;
 use Mockery\MockInterface;
-use Tests\TestCase;
 
 class AuthControllerTest extends TestCase
 {

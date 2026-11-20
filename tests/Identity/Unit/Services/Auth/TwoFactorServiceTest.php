@@ -7,14 +7,12 @@ use App\Domain\Identity\Exceptions\Auth\TwoFactorAlreadyEnabledException;
 use App\Domain\Identity\Exceptions\Auth\TwoFactorNotEnabledException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\Auth\TwoFactorService;
+use App\Domain\Identity\Tests\TestCase;
 use App\Support\Encryption\EncryptedEnvelope;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Concerns\SeedsRolesAndPermissions;
-use Tests\TestCase;
+use App\Support\Testing\Concerns\SeedsRolesAndPermissions;
 
 class TwoFactorServiceTest extends TestCase
 {
-    use RefreshDatabase;
     use SeedsRolesAndPermissions;
 
     private TwoFactorService $service;

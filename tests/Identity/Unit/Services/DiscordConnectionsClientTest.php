@@ -3,8 +3,8 @@
 namespace App\Domain\Identity\Tests\Unit\Services;
 
 use App\Domain\Identity\Services\DiscordConnectionsClient;
+use App\Domain\Identity\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 class DiscordConnectionsClientTest extends TestCase
 {
