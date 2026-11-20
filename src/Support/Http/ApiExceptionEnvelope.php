@@ -39,26 +39,33 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 final class ApiExceptionEnvelope
 {
     /**
-     * Handlers already configured, by object id.
+     * Handlers already configured.
      *
      * Two registration paths exist on purpose: the host calls this from
      * `bootstrap/app.php`, the kernel provider calls it for a consumer that has
      * no such file. In the monolith both run, and a second set of renderables
      * would re-answer every exception with an identical response.
      *
-     * @var array<int, true>
+     * Keyed by the handler **object**, not `spl_object_id()`: a long-lived
+     * process (Testbench, Octane, a full suite run) recycles ids once a handler
+     * is freed, and a recycled id would make the guard skip a fresh handler —
+     * that handler then answers 401/404/429 with Laravel's bare `{message}`
+     * instead of the envelope. A `WeakMap` keys on identity without pinning
+     * the handler in memory.
+     *
+     * @var \WeakMap<Handler, true>|null
      */
-    private static array $registered = [];
+    private static ?\WeakMap $registered = null;
 
     public static function register(Handler $handler): void
     {
-        $id = spl_object_id($handler);
+        self::$registered ??= new \WeakMap;
 
-        if (isset(self::$registered[$id])) {
+        if (isset(self::$registered[$handler])) {
             return;
         }
 
-        self::$registered[$id] = true;
+        self::$registered[$handler] = true;
 
         $handler->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
