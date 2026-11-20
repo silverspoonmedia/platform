@@ -320,7 +320,44 @@ class DomainManager
             $paths[] = base_path($package['routes']);
         }
 
+        // The kernel's own routes minus the registry entry: Identity ships under
+        // `identity.php` (it is a domain), and the cross-domain surface — settings,
+        // product activations, domain access, broadcast auth, the batch fan-in —
+        // belongs to the kernel rather than to a domain, so no registry entry names
+        // it. `routes/kernel-*.php`, in filename order so the load order is stable
+        // and identical in the monolith and a consumer install.
+        $platform = $this->packageRootPath('silverspoonmedia/platform');
+
+        if ($platform !== null) {
+            foreach (glob($platform.'/routes/kernel-*.php') ?: [] as $kernelRoute) {
+                $paths[] = $kernelRoute;
+            }
+        }
+
         return $paths;
+    }
+
+    /**
+     * Absolute install directory of a Composer package.
+     *
+     * Resolved by looking at both places the same package can live: `vendor/`
+     * (a consumer install) and `packages/{slug}` (this repo's path repository,
+     * where `vendor/` is a junction to it). Composer's own install-path API is
+     * deliberately not used — the kernel does not take a runtime dependency just
+     * to answer a filesystem question.
+     */
+    private function packageRootPath(string $package): ?string
+    {
+        foreach ([
+            base_path('vendor/'.$package),
+            base_path('packages/'.substr($package, strpos($package, '/') + 1)),
+        ] as $candidate) {
+            if (is_dir($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**

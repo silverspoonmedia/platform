@@ -32,6 +32,7 @@
         "psr-4": {
             "App\\Support\\": "src/Support/",
             "App\\Domain\\Identity\\": "src/Domain/Identity/",
+            "App\\Console\\": "src/Console/",
             "App\\Http\\": "src/Http/",
             "App\\Repositories\\": "src/Repositories/",
             "App\\Providers\\": "src/Providers/",

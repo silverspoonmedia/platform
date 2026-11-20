@@ -2,10 +2,15 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\Domain\ListDomainsCommand;
+use App\Repositories\Contracts\EloquentCrudRepositoryInterface;
+use App\Repositories\Eloquent\EloquentCrudRepository;
 use App\Support\Ai\AiUsageConsolidatorRegistry;
 use App\Support\Billing\FulfillmentRegistry;
 use App\Support\Broadcasting\ChannelRegistrarRegistry;
 use App\Support\Encryption\LegacyColumnMigratorRegistry;
+use App\Support\Http\AllowlistCorsService;
+use Fruitcake\Cors\CorsService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,9 +19,16 @@ use Illuminate\Support\ServiceProvider;
  *
  * The host has `AppServiceProvider`, which ships the platform as an app; a
  * consumer installs `silverspoonmedia/platform` and gets this provider instead.
- * It carries only what a package needs to work outside the monolith: factory
- * discovery, the package's migrations (publishable, not auto-loaded — the host
- * owns its schema), and the two storage directories Laravel assumes exist.
+ * It carries only what a package needs to work outside the monolith: the shared
+ * repository, the CORS service `HandleCors` injects, the kernel-owned seam
+ * registries, the package's migrations (publishable, not auto-loaded — the host
+ * owns its schema), and the storage directories Laravel assumes exist.
+ *
+ * **A consumer must list this class in `bootstrap/providers.php`.** It is
+ * deliberately absent from `extra.laravel.providers`: auto-discovery would boot
+ * it in the monolith too, where `AppServiceProvider` already owns these
+ * bindings, and a second pass after a seam registry resolved would replace the
+ * singleton and silently drop every registration.
  */
 class KernelServiceProvider extends ServiceProvider
 {
@@ -42,10 +54,44 @@ class KernelServiceProvider extends ServiceProvider
         // maps, and a second instance would silently drop every registration.
         // The host binds the same four in `AppServiceProvider`; a consumer
         // installs the platform and gets them here.
-        $this->app->singleton(FulfillmentRegistry::class);
-        $this->app->singleton(LegacyColumnMigratorRegistry::class);
-        $this->app->singleton(ChannelRegistrarRegistry::class);
-        $this->app->singleton(AiUsageConsolidatorRegistry::class);
+        //
+        // `bound()` guards, not bare `singleton()` calls: `singleton()` forgets
+        // any resolved instance, so registering twice would discard the seam
+        // registrations a package already published. In the monolith the host
+        // provider runs first and these become no-ops; in a consumer install the
+        // host has no such provider and this file is the only source.
+        $this->singletonOnce(FulfillmentRegistry::class);
+        $this->singletonOnce(LegacyColumnMigratorRegistry::class);
+        $this->singletonOnce(ChannelRegistrarRegistry::class);
+        $this->singletonOnce(AiUsageConsolidatorRegistry::class);
+
+        if (! $this->app->bound(EloquentCrudRepositoryInterface::class)) {
+            $this->app->bind(EloquentCrudRepositoryInterface::class, EloquentCrudRepository::class);
+        }
+
+        // `HandleCors` injects this service. The stock implementation answers a
+        // single-origin allowlist without checking the request origin; see the
+        // class docblock for why that must not reach the browser.
+        if (! $this->app->bound(CorsService::class)) {
+            $this->app->bind(CorsService::class, AllowlistCorsService::class);
+        }
+    }
+
+    /**
+     * Bind a seam registry only when nothing already answered for it.
+     *
+     * `singleton()` preserves no instance, so a duplicate call after a package
+     * registered a fulfillment handler would empty the map.
+     *
+     * @param  class-string  $abstract
+     */
+    private function singletonOnce(string $abstract): void
+    {
+        if ($this->app->bound($abstract)) {
+            return;
+        }
+
+        $this->app->singleton($abstract);
     }
 
     public function boot(): void
@@ -53,6 +99,11 @@ class KernelServiceProvider extends ServiceProvider
         $this->ensureStorageDirectories();
 
         if ($this->app->runningInConsole()) {
+            // `domain:list` is the only domain command that edits nothing: it
+            // reads the registry and the install paths. `domain:make` and
+            // `domain:remove` rewrite host trees, so they stay host-owned.
+            $this->commands([ListDomainsCommand::class]);
+
             $this->publishes([
                 __DIR__.'/../../database/migrations' => database_path((string) config('platform.migrations_path', 'migrations')),
             ], 'silverspoon-platform-migrations');
