@@ -21,6 +21,7 @@
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^8.0",
         "symfony/http-foundation": "^8.0",
+        "symfony/http-kernel": "^8.0",
         "symfony/mime": "^8.0"
     },
     "require-dev": {
@@ -55,7 +56,8 @@
                 "App\\Providers\\ProductServiceProvider",
                 "App\\Providers\\DomainAccessServiceProvider",
                 "App\\Providers\\SettingsServiceProvider",
-                "App\\Providers\\Domain\\IdentityServiceProvider"
+                "App\\Providers\\Domain\\IdentityServiceProvider",
+                "App\\Providers\\ApiExceptionEnvelopeServiceProvider"
             ]
         }
     },

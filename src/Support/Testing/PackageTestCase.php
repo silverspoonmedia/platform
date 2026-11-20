@@ -7,12 +7,15 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Http\Middleware\OptionalJwtAuthenticate;
 use App\Http\Middleware\SetLocale;
+use App\Providers\ApiExceptionEnvelopeServiceProvider;
 use App\Providers\Domain\IdentityServiceProvider;
 use App\Providers\DomainAccessServiceProvider;
 use App\Providers\EncryptionServiceProvider;
 use App\Providers\KernelServiceProvider;
 use App\Providers\ProductServiceProvider;
 use App\Providers\SettingsServiceProvider;
+use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -68,6 +71,21 @@ class PackageTestCase extends TestbenchTestCase
         ]);
 
         $this->withoutMiddleware(PreventRequestForgery::class);
+
+        // The host states this in `bootstrap/app.php`: an unauthenticated client
+        // gets a JSON 401, never a redirect (the SPA owns login, so no `login`
+        // route exists to name). Testbench's builder registers
+        // `redirectGuestsTo(fn () => route('login'))` when the HTTP kernel
+        // resolves, which throws RouteNotFoundException on a guarded request
+        // that does not ask for JSON. Registrations run in order and ours is
+        // added later, so it is the one that sticks.
+        $ourPolicy = static fn () => Authenticate::redirectUsing(static fn () => null);
+
+        if ($this->app->resolved(HttpKernelContract::class)) {
+            $ourPolicy();
+        } else {
+            $this->app->afterResolving(HttpKernelContract::class, $ourPolicy);
+        }
     }
 
     /**
@@ -90,6 +108,7 @@ class PackageTestCase extends TestbenchTestCase
             DomainAccessServiceProvider::class,
             SettingsServiceProvider::class,
             IdentityServiceProvider::class,
+            ApiExceptionEnvelopeServiceProvider::class,
             ServiceProvider::class,
         ];
     }

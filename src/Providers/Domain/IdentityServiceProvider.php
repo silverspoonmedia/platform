@@ -16,6 +16,11 @@ class IdentityServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+
+        // The captcha gate is Identity policy: its requests read `hcaptcha.*`
+        // through `setting_config()`, so the block ships with this package. A
+        // kernel-only install would otherwise post to an empty verify URI.
+        $this->mergeConfigFrom(__DIR__.'/../../../config/hcaptcha.php', 'hcaptcha');
     }
 
     public function boot(): void
