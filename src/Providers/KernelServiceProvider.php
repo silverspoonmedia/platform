@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Console\Commands\Domain\ListDomainsCommand;
+use App\Console\Commands\EncryptionFlushDecryptedCacheCommand;
 use App\Repositories\Contracts\EloquentCrudRepositoryInterface;
 use App\Repositories\Eloquent\EloquentCrudRepository;
 use App\Support\Ai\AiUsageConsolidatorRegistry;
@@ -99,10 +100,14 @@ class KernelServiceProvider extends ServiceProvider
         $this->ensureStorageDirectories();
 
         if ($this->app->runningInConsole()) {
-            // `domain:list` is the only domain command that edits nothing: it
-            // reads the registry and the install paths. `domain:make` and
-            // `domain:remove` rewrite host trees, so they stay host-owned.
-            $this->commands([ListDomainsCommand::class]);
+            // Both commands edit nothing durable: `domain:list` reads the
+            // registry and the install paths, and the cache flush forgets one
+            // key. `domain:make` / `domain:remove` rewrite host trees and stay
+            // host-owned.
+            $this->commands([
+                ListDomainsCommand::class,
+                EncryptionFlushDecryptedCacheCommand::class,
+            ]);
 
             $this->publishes([
                 __DIR__.'/../../database/migrations' => database_path((string) config('platform.migrations_path', 'migrations')),

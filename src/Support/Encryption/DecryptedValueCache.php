@@ -70,12 +70,6 @@ class DecryptedValueCache
         $this->forgetByContext($contextKey);
     }
 
-    public function flushAll(): void
-    {
-        // POC uses key-per-record cache; full flush is store-dependent.
-        // Artisan command documents limitation; Redis SCAN flush deferred to Phase 2.
-    }
-
     private function maxTtl(): int
     {
         return (int) config('encryption.decrypted_cache_max_ttl', 86400);
