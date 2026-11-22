@@ -37,7 +37,7 @@ final class SettingsReader
     /**
      * Resolve a config path via registry index or direct config().
      *
-     * Parent array paths (e.g. microstock.ai.vision) overlay any registered
+     * Parent array paths (e.g. the vision block a product configures) overlay any registered
      * descendant leaf overrides so mixed Tier A/B arrays stay coherent.
      */
     public function config(string $configPath, mixed $default = null): mixed

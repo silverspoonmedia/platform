@@ -14,7 +14,7 @@ use Throwable;
  * Shared S3-compatible multipart / single-PUT presign engine.
  *
  * Domain upload services own session models, ownership, quota, and path layout;
- * this class owns only storage mechanics so Archivd (and other upload surfaces) stay DRY.
+ * this class owns only storage mechanics so a product's upload surface stays DRY.
  */
 class S3DirectUploadEngine
 {
@@ -253,7 +253,7 @@ class S3DirectUploadEngine
             return $e;
         }
 
-        if (config('archivd.debug_log_requests')) {
+        if (config('storage.debug_log_requests')) {
             $context = ['exception' => $e::class, 'message' => $e->getMessage()];
 
             if ($e instanceof AwsException) {
@@ -270,7 +270,7 @@ class S3DirectUploadEngine
                 }
             }
 
-            Log::channel('single')->warning('archivd upstream_failed', $context);
+            Log::channel('single')->warning('storage upstream_failed', $context);
         }
 
         $message = $e instanceof AwsException
@@ -357,7 +357,7 @@ class S3DirectUploadEngine
      */
     public function isUploadProxyEnabled(): bool
     {
-        $baseUrl = (string) config('archivd.upload_proxy.base_url', '');
+        $baseUrl = (string) config('storage.upload_proxy.base_url', '');
 
         return $baseUrl !== '';
     }
@@ -383,9 +383,9 @@ class S3DirectUploadEngine
             return [];
         }
 
-        $baseUrl = rtrim((string) config('archivd.upload_proxy.base_url', ''), '/');
-        $token = (string) config('archivd.upload_proxy.token', '');
-        $diskTargets = (array) config('archivd.upload_proxy.disk_targets', []);
+        $baseUrl = rtrim((string) config('storage.upload_proxy.base_url', ''), '/');
+        $token = (string) config('storage.upload_proxy.token', '');
+        $diskTargets = (array) config('storage.upload_proxy.disk_targets', []);
         $alias = isset($diskTargets[$diskName]) ? (string) $diskTargets[$diskName] : '';
 
         if ($baseUrl === '' || $token === '' || $alias === '') {

@@ -11,7 +11,7 @@ trait RespondsWithListDisplayMode
 {
     /**
      * Query-mode list body: legacy flat `T[]` unless page/per_page/search are present,
-     * then `{ items, pagination }` (same shape as inference/microstock usage events).
+     * then `{ items, pagination }` (same shape as the inference usage-event lists).
      *
      * @param  callable(mixed): array<int, array<string, mixed>>  $resolveRows
      */

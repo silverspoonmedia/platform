@@ -42,6 +42,7 @@ class KernelConfigSelfSufficiencyTest extends PackageTestCase
         'localization',
         'services',
         'hcaptcha',
+        'storage',
     ];
 
     /**
@@ -96,16 +97,13 @@ class KernelConfigSelfSufficiencyTest extends PackageTestCase
     /**
      * Groups a **product** owns, read only behind a default.
      *
-     * `S3DirectUploadEngine` asks for `archivd.upload_proxy.*` and
-     * `archivd.debug_log_requests` to decide whether an upload proxy is
-     * configured. A consumer with no product installed reads the defaults and
-     * takes the direct path, so the key is legal and never load-bearing.
+     * Empty on purpose: the storage proxy the engine used to read from
+     * `archivd.*` now lives in the kernel-owned `storage` group, and a product
+     * publishes into it instead of owning it.
      *
      * @var list<string>
      */
-    private const PRODUCT_OWNED = [
-        'archivd',
-    ];
+    private const PRODUCT_OWNED = [];
 
     #[Test]
     public function every_kernel_config_group_resolves_without_a_host_config_directory(): void

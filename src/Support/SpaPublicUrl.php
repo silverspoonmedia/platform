@@ -60,24 +60,6 @@ final class SpaPublicUrl
         return self::to('/verify-email/'.self::assertSafeSegment($id).'/'.self::assertSafeSegment($hash), $forward);
     }
 
-    public static function publicFileShare(string $fileId): string
-    {
-        if (self::origin() === null) {
-            return route('archivd.public.files.show', ['file' => $fileId]);
-        }
-
-        return self::to('/s/f/'.self::assertSafeSegment($fileId));
-    }
-
-    public static function publicFolderShare(string $folderId): string
-    {
-        if (self::origin() === null) {
-            return route('archivd.public.folders.show', ['folder' => $folderId]);
-        }
-
-        return self::to('/s/d/'.self::assertSafeSegment($folderId));
-    }
-
     public static function paymentReturn(): string
     {
         if (self::origin() !== null) {
@@ -120,8 +102,7 @@ final class SpaPublicUrl
         return $pathname;
     }
 
-    private static function assertSafeSegment(string $segment): string
-    {
+    private static function assertSafeSegment(string $segment): string    {
         if ($segment === '' || str_contains($segment, '/') || str_contains($segment, '\\') || str_contains($segment, '..') || str_contains($segment, ':') || str_contains($segment, '?') || str_contains($segment, '#')) {
             throw new InvalidArgumentException('Invalid SPA public URL segment.');
         }

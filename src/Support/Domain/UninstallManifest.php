@@ -296,6 +296,36 @@ class UninstallManifest
     // ------------------------------------------------------------------- plan
 
     /**
+     * Which repo and path a manifest entry names.
+     *
+     * A product's file inside a package or a host test belongs to the **backend**
+     * section, not the sibling `spa` one: the old manifests pinned
+     * `packages/*` paths under `spa` and the drift guard reported them as
+     * "matches nothing". The repo is derived from the path, so a manifest cannot
+     * disagree with the checkout it lives in.
+     *
+     * @return array{0: string, 1: string} [repo, path]
+     */
+    private function entryTarget(string $repo, array $entry, string $pathKey = 'path'): array
+    {
+        $path = str_replace('\\', '/', (string) ($entry[$pathKey] ?? ''));
+
+        // A package file recorded under `spa` targets the backend checkout. The
+        // split is on the file extension, not the leading directory: a repo-root
+        // file such as `i18n-duplicate-report.json` is still the SPA's.
+        $spaFile = (bool) preg_match('/(^|\/)package(-lock)?\.json$|\.[cm]?[jt]sx?$|\.vue$|\.[mc]?js$|\.mdx?$|\.ya?ml$|\.jsonc?$/', $path);
+
+        if ($repo === UninstallReferenceScanner::REPO_SPA && $path !== '' && ! $spaFile
+            && ! str_starts_with($path, 'src/')
+            && ! str_starts_with($path, 'scripts/') && ! str_starts_with($path, 'tests/')
+            && ! str_starts_with($path, 'docs/') && ! str_starts_with($path, 'public/')) {
+            return [UninstallReferenceScanner::REPO_BACKEND, $path];
+        }
+
+        return [$repo, $path];
+    }
+
+    /**
      * Resolve the manifest into what would happen, without writing anything.
      *
      * @return array{
@@ -324,19 +354,24 @@ class UninstallManifest
             }
 
             foreach ($section['delete'] ?? [] as $path) {
-                $matches = $root === null ? [] : $this->resolve($root, $path);
-                $deletes[] = ['repo' => $repo, 'path' => $path, 'matches' => $matches];
+                [$target, $path] = $this->entryTarget($repo, ['path' => $path]);
+                $targetRoot = $target === $repo ? $root : $this->scanner->root($target);
+                $matches = $targetRoot === null ? [] : $this->resolve($targetRoot, $path);
+                $deletes[] = ['repo' => $target, 'path' => $path, 'matches' => $matches];
 
-                if ($root !== null && $matches === []) {
-                    $warnings[] = "delete path matches nothing: {$repo}:{$path}";
+                if ($targetRoot !== null && $matches === []) {
+                    $warnings[] = "delete path matches nothing: {$target}:{$path}";
                 }
             }
 
             foreach ($section['edits'] ?? [] as $edit) {
-                $matches = $root === null ? [] : $this->resolve($root, (string) $edit['file']);
+                [$target, $file] = $this->entryTarget($repo, $edit, 'file');
+                $targetRoot = $target === $repo ? $root : $this->scanner->root($target);
+                $edit['file'] = $file;
+                $matches = $targetRoot === null ? [] : $this->resolve($targetRoot, $file);
 
-                if ($root !== null && $matches === []) {
-                    $warnings[] = "edit file matches nothing: {$repo}:{$edit['file']}";
+                if ($targetRoot !== null && $matches === []) {
+                    $warnings[] = "edit file matches nothing: {$target}:{$file}";
                 }
 
                 $removed = 0;
@@ -349,8 +384,8 @@ class UninstallManifest
                 }
 
                 $edits[] = [
-                    'repo' => $repo,
-                    'file' => (string) $edit['file'],
+                    'repo' => $target,
+                    'file' => $file,
                     'op' => (string) $edit['op'],
                     'edit' => $edit,
                     'matches' => $matches,
@@ -368,14 +403,20 @@ class UninstallManifest
             }
 
             foreach ($section['ignore'] ?? [] as $entry) {
-                if ($this->resolve($root, (string) $entry['path']) === []) {
-                    $warnings[] = "ignore path matches nothing: {$repo}:{$entry['path']}";
+                [$target, $path] = $this->entryTarget($repo, $entry);
+                $targetRoot = $target === $repo ? $root : $this->scanner->root($target);
+
+                if ($targetRoot !== null && $this->resolve($targetRoot, $path) === []) {
+                    $warnings[] = "ignore path matches nothing: {$target}:{$path}";
                 }
             }
 
             foreach ($section['unresolved'] ?? [] as $entry) {
-                if ($this->resolve($root, (string) $entry['file']) === []) {
-                    $warnings[] = "unresolved file matches nothing: {$repo}:{$entry['file']}";
+                [$target, $file] = $this->entryTarget($repo, $entry, 'file');
+                $targetRoot = $target === $repo ? $root : $this->scanner->root($target);
+
+                if ($targetRoot !== null && $this->resolve($targetRoot, $file) === []) {
+                    $warnings[] = "unresolved file matches nothing: {$target}:{$file}";
                 }
             }
         }
@@ -406,6 +447,7 @@ class UninstallManifest
     {
         $manifest ??= $this->load($name);
         $data = is_array($manifest['data'] ?? null) ? $manifest['data'] : [];
+        $slug = $this->domains->slug($name);
         $hits = $this->scanner->hitsByFile(
             $name,
             $this->isStringList($manifest['needles'] ?? null, allowEmpty: true) ? $manifest['needles'] : [],
@@ -416,36 +458,66 @@ class UninstallManifest
         $ownDirs = [
             'app/Domain/'.$this->domains->normalizeName($name).'/',
             'tests/Domain/'.$this->domains->normalizeName($name).'/',
+            // The SPA keeps a product's tree, its copy and its tests under one
+            // directory; every file in it is the product's own, so a reference
+            // between two of its files is not shared-shell coupling.
+            'src/features/'.$slug.'/',
+            'src/i18n/features/'.$slug.'/',
+            'tests/'.$slug,
         ];
 
         foreach ($hits as $repo => $files) {
-            $section = $manifest['repos'][$repo] ?? [];
-            $patterns = array_merge(
-                $section['delete'] ?? [],
-                array_map(static fn (array $edit): string => (string) $edit['file'], $section['edits'] ?? []),
-                array_map(static fn (array $entry): string => (string) $entry['file'], $section['unresolved'] ?? []),
-                array_map(static fn (array $entry): string => (string) $entry['path'], $section['ignore'] ?? []),
-            );
+            $patterns = [];
+
+            // An entry may live in the other section and still name a file in
+            // this checkout (a package file recorded under `spa`), so every
+            // section's entries whose target resolves to this repo count as
+            // coverage — otherwise the guard reports the same file twice.
+            foreach (UninstallReferenceScanner::REPOS as $sectionRepo) {
+                $section = $manifest['repos'][$sectionRepo] ?? [];
+
+                foreach ($section['delete'] ?? [] as $path) {
+                    [$target, $resolved] = $this->entryTarget($sectionRepo, ['path' => $path]);
+                    if ($target === $repo) {
+                        $patterns[] = $resolved;
+                    }
+                }
+
+                foreach (['edits' => 'file', 'unresolved' => 'file', 'ignore' => 'path'] as $key => $pathKey) {
+                    foreach ($section[$key] ?? [] as $entry) {
+                        [$target, $resolved] = $this->entryTarget($sectionRepo, $entry, $pathKey);
+                        if ($target === $repo) {
+                            $patterns[] = $resolved;
+                        }
+                    }
+                }
+            }
+
+            $patterns = array_values(array_unique($patterns));
 
             foreach ($files as $relative => $lines) {
                 if ($repo === UninstallReferenceScanner::REPO_BACKEND) {
                     if ($this->scanner->isStructuralFile($relative) || $this->scanner->isManifestFile($relative)) {
                         continue;
                     }
+                }
 
-                    $insideOwn = false;
+                if (in_array($relative, $data['migrations'] ?? [], true)) {
+                    continue;
+                }
 
-                    foreach ($ownDirs as $dir) {
-                        if (str_starts_with($relative, $dir)) {
-                            $insideOwn = true;
+                $insideOwn = false;
 
-                            break;
-                        }
+                foreach ($ownDirs as $dir) {
+                    if (str_starts_with($relative, $dir)) {
+                        $insideOwn = true;
+
+                        break;
                     }
+                }
 
-                    if ($insideOwn || in_array($relative, $data['migrations'] ?? [], true)) {
-                        continue;
-                    }
+                if ($insideOwn) {
+                    continue;
                 }
 
                 if ($this->scanner->pathCoveredBy($relative, $patterns)) {

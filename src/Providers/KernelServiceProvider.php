@@ -11,6 +11,8 @@ use App\Support\Billing\FulfillmentRegistry;
 use App\Support\Broadcasting\ChannelRegistrarRegistry;
 use App\Support\Encryption\LegacyColumnMigratorRegistry;
 use App\Support\Http\AllowlistCorsService;
+use App\Support\Settings\SettingCatalog;
+use App\Support\Navigation\MenuContributorRegistry;
 use Fruitcake\Cors\CorsService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
@@ -49,6 +51,11 @@ class KernelServiceProvider extends ServiceProvider
         // link read these, and a kernel-only install has no host `services.php`.
         $this->mergeConfigFrom(__DIR__.'/../../config/services.php', 'services');
 
+        // Storage mechanics the kernel ships (the direct-upload engine). Empty by
+        // default; a product publishes its upload proxy into `storage.*` instead
+        // of the kernel reading the product's own config group.
+        $this->mergeConfigFrom(__DIR__.'/../../config/storage.php', 'storage');
+
         // Kernel-owned registries: a packaged domain publishes seams into these
         // from its own provider, so neither the kernel nor a package imports the
         // other's classes. Singleton is correct — they are pure registration
@@ -65,6 +72,8 @@ class KernelServiceProvider extends ServiceProvider
         $this->singletonOnce(LegacyColumnMigratorRegistry::class);
         $this->singletonOnce(ChannelRegistrarRegistry::class);
         $this->singletonOnce(AiUsageConsolidatorRegistry::class);
+        $this->singletonOnce(SettingCatalog::class);
+        $this->singletonOnce(MenuContributorRegistry::class);
 
         if (! $this->app->bound(EloquentCrudRepositoryInterface::class)) {
             $this->app->bind(EloquentCrudRepositoryInterface::class, EloquentCrudRepository::class);

@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
  *
  * `silverspoonmedia/ai` (Inference) renders the admin usage dashboard — totals,
  * per-stage and per-provider breakdowns — but the ledger table belongs to the
- * product that actually bills the tokens (`microstock_ai_usage_events`). The
- * kernel declares the shape; the product binds the adapter.
+ * product that actually bills the tokens. The kernel declares the shape; the
+ * product binds the adapter.
  *
  * A host without an AI ledger simply has no binding — call sites wrap the
  * resolve in `app()->bound()` and render an empty dashboard instead of failing.

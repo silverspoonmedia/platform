@@ -60,7 +60,7 @@ class UpdateSettingsGroupRequest extends FormRequest
 
         foreach ($definitions as $key => $definition) {
             $field = str_replace('.', '_', $key);
-            $rules[$field] = $this->ruleFor($definition['type'], $key);
+            $rules[$field] = $this->ruleFor($definition);
         }
 
         return $rules;
@@ -88,19 +88,25 @@ class UpdateSettingsGroupRequest extends FormRequest
         return $payload;
     }
 
-    private function ruleFor(SettingType $type, string $key): array
+    /**
+     * A definition may declare its own extra rules (`rules`), so a product
+     * constrains its own enum while the kernel names no product key.
+     *
+     * @param  array{group: string, type: SettingType, config: string, options?: list<string>, rules?: list<mixed>}  $definition
+     * @return list<mixed>
+     */
+    private function ruleFor(array $definition): array
     {
-        return match ($type) {
+        $base = match ($definition['type']) {
             SettingType::Bool => ['sometimes', 'boolean'],
             SettingType::Int => ['sometimes', 'integer'],
             SettingType::Float => ['sometimes', 'numeric'],
-            SettingType::String => match ($key) {
-                'platform.notifications.delivery' => ['sometimes', 'string', Rule::in(['polling', 'realtime'])],
-                'platform.payment.channel_fee_bearer' => ['sometimes', 'string', Rule::in(['buyer', 'merchant'])],
-                'microstock.ai.vision_image.delivery' => ['sometimes', 'string', Rule::in(['base64', 'url'])],
-                default => ['sometimes', 'string', 'max:255'],
-            },
+            SettingType::String => ($definition['options'] ?? []) !== []
+                ? ['sometimes', 'string', Rule::in($definition['options'])]
+                : ['sometimes', 'string', 'max:255'],
             SettingType::Array => ['sometimes', 'array'],
         };
+
+        return [...$base, ...($definition['rules'] ?? [])];
     }
 }
