@@ -104,9 +104,25 @@ class UninstallReferenceScanner
 
         return [
             self::REPO_BACKEND => base_path(),
-            self::REPO_SPA => $parent.DIRECTORY_SEPARATOR.'monolith-vue-workers',
-            self::REPO_DOCS => $parent.DIRECTORY_SEPARATOR.'docs',
+            self::REPO_SPA => $parent.DIRECTORY_SEPARATOR.$this->siblingDirectory(self::REPO_SPA, 'monolith-vue-workers'),
+            self::REPO_DOCS => $parent.DIRECTORY_SEPARATOR.$this->siblingDirectory(self::REPO_DOCS, 'docs'),
         ];
+    }
+
+    /**
+     * The sibling checkout's directory name.
+     *
+     * A fork's pair is not named after the original (`cored-backend` next to
+     * `cored-frontend`), and a hardcoded sibling name would make its `spa` section
+     * permanently unverifiable — the removal would report "checked" while never
+     * reading the SPA. `config/domains.php` `siblings` names the directories; the
+     * monolith's defaults keep every existing path and warning unchanged.
+     */
+    private function siblingDirectory(string $repo, string $default): string
+    {
+        $configured = config('domains.siblings.'.$repo);
+
+        return is_string($configured) && $configured !== '' ? $configured : $default;
     }
 
     public function root(string $repo): ?string

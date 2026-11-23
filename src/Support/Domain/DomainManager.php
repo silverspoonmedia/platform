@@ -230,6 +230,13 @@ class DomainManager
                 $meta = [];
             }
 
+            // Registry metadata shares the file but is not a domain: `siblings`
+            // names the sibling checkouts the uninstall scanner reads. A kind-less
+            // key would otherwise register as a phantom package domain.
+            if (! array_key_exists('kind', $meta)) {
+                continue;
+            }
+
             $platform = in_array($name, self::PLATFORM_CORE, true);
             $kind = $this->resolveKindFromMeta($meta, $platform);
 
