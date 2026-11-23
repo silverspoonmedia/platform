@@ -102,7 +102,8 @@ final class SpaPublicUrl
         return $pathname;
     }
 
-    private static function assertSafeSegment(string $segment): string    {
+    private static function assertSafeSegment(string $segment): string
+    {
         if ($segment === '' || str_contains($segment, '/') || str_contains($segment, '\\') || str_contains($segment, '..') || str_contains($segment, ':') || str_contains($segment, '?') || str_contains($segment, '#')) {
             throw new InvalidArgumentException('Invalid SPA public URL segment.');
         }

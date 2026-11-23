@@ -1,12 +1,14 @@
 <?php
 
+use App\Support\Storage\S3DirectUploadEngine;
+
 /**
  * Kernel-owned storage mechanics.
  *
  * `silverspoonmedia/platform` ships the direct-upload engine, so the engine's own
  * knobs live here, not in a product's config file. Empty by default: a
  * kernel-only install presigns directly against S3 (see
- * {@see \App\Support\Storage\S3DirectUploadEngine::isUploadProxyEnabled()}) and
+ * {@see S3DirectUploadEngine::isUploadProxyEnabled()}) and
  * logs no upstream detail.
  *
  * A product that routes uploads through its own Worker publishes the values from

@@ -3,6 +3,7 @@
 namespace App\Support\Settings;
 
 use App\Support\Settings\Contracts\SettingContributor;
+use Illuminate\Validation\Rule;
 
 /**
  * Canonical registry of UI-manageable operational settings.
@@ -172,7 +173,7 @@ final class SettingCatalog
                 SettingType::String,
                 'payment.channel_fee_bearer',
                 null,
-                [\Illuminate\Validation\Rule::in(['buyer', 'merchant'])],
+                [Rule::in(['buyer', 'merchant'])],
             ),
             'platform.payment.reporting_timezone' => $this->def('platform', SettingType::String, 'payment.reporting_timezone'),
             'platform.payment.prefer_channel_checkout' => $this->def('platform', SettingType::Bool, 'payment.checkout.prefer_channel_checkout'),

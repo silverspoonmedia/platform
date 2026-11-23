@@ -90,8 +90,23 @@ class UninstallFileEditor
             'remove_quoted_strings' => $this->removeQuotedStrings($contents, $this->requireList($edit, 'match', $op)),
             'remove_array_keys' => $this->removeKeyedPaths($contents, $this->requireList($edit, 'match', $op), '=>'),
             'remove_json_keys' => $this->removeJsonKeys($contents, $this->requireList($edit, 'match', $op), $notes),
-            'remove_block' => $this->removeBlock($contents, $this->requireString($edit, 'begin', $op)),
+            'remove_block' => $this->removeBlock($contents, $this->requireAnchor($edit, $op)),
         };
+    }
+
+    /**
+     * `begin` (one anchor, every match) or `begins` (several anchors, one entry
+     * each) — both name entries to drop, never a layout.
+     *
+     * @return string|list<string>
+     */
+    private function requireAnchor(array $edit, string $op): array|string
+    {
+        if (isset($edit['begins'])) {
+            return array_values($this->requireList($edit, 'begins', $op));
+        }
+
+        return $this->requireString($edit, 'begin', $op);
     }
 
     // ---------------------------------------------------------------- line ops
@@ -237,10 +252,22 @@ class UninstallFileEditor
     }
 
     /**
+     * Remove the entry whose anchor is `begin`.
+     *
+     * A bare anchor is a *selector*, not layout: it matches the first line that
+     * contains it, so the manifest stays correct when the file around it changes.
+     * The removed unit is the entry the anchor names — a commented line, a
+     * `key => value` line, a map pair, a whole import — or, when the anchor opens
+     * a nested container (`'Key' => [`), that container's block.
+     *
      * @return array{0: string, 1: int}
      */
-    private function removeBlock(string $contents, string $begin): array
+    private function removeBlock(string $contents, array|string $begin): array
     {
+        if (is_array($begin)) {
+            return $this->removeAnchoredLine($contents, $begin);
+        }
+
         $anchor = strpos($contents, $begin);
 
         if ($anchor === false) {
@@ -250,7 +277,7 @@ class UninstallFileEditor
         $bracket = $this->openingBracket($contents, $anchor);
 
         if ($bracket === null) {
-            return [$contents, 0];
+            return $this->removeAnchoredLine($contents, [$begin]);
         }
 
         $close = $this->matchBracket($contents, $bracket);
@@ -263,6 +290,87 @@ class UninstallFileEditor
         $end = $this->consumeTrailing($contents, $close);
 
         return [substr($contents, 0, $start).substr($contents, $end), 1];
+    }
+
+    /**
+     * Drop every line that contains one of the anchors, together with the line it
+     * continues (a `key => value` wrapped over several lines) and any comment
+     * block immediately above it that is attached to it — a `//` or `/* *\/`
+     * comment with no blank line between it and the entry.
+     *
+     * This is the selector form for an entry that is a line, not a block: an
+     * import, a `config([...])` line, a commented-out reference. One anchor per
+     * entry, so a manifest names *what* leaves, never *where* it sat.
+     *
+     * @param  list<string>  $anchors
+     * @return array{0: string, 1: int}
+     */
+    private function removeAnchoredLine(string $contents, array $anchors): array
+    {
+        $lines = $this->splitLines($contents);
+        $count = count($lines);
+        $drop = [];
+        $removed = 0;
+
+        foreach ($lines as $index => $line) {
+            $hit = false;
+
+            foreach ($anchors as $anchor) {
+                if ($anchor !== '' && str_contains($line, $anchor)) {
+                    $hit = true;
+
+                    break;
+                }
+            }
+
+            if (! $hit || isset($drop[$index])) {
+                continue;
+            }
+
+            $removed++;
+            $drop[$index] = true;
+
+            // A wrapped entry continues while its brackets stay open: consume the
+            // following lines until they balance. A single-line entry stops here.
+            $depth = substr_count($line, '(') + substr_count($line, '[') - substr_count($line, ')') - substr_count($line, ']');
+
+            while ($depth > 0 && $index + 1 < $count) {
+                $index++;
+                $next = $lines[$index];
+                $depth += substr_count($next, '(') + substr_count($next, '[') - substr_count($next, ')') - substr_count($next, ']');
+                $drop[$index] = true;
+            }
+
+            // Attached comment block above the entry.
+            $above = $index - 1;
+
+            while ($above >= 0 && ! isset($drop[$above])) {
+                $text = trim($lines[$above]);
+
+                if ($text === '' || (! str_starts_with($text, '//') && ! str_starts_with($text, '/*') && ! str_starts_with($text, '*') && ! str_ends_with($text, '*/'))) {
+                    break;
+                }
+
+                $drop[$above] = true;
+                $above--;
+            }
+        }
+
+        if ($removed === 0) {
+            return [$contents, 0];
+        }
+
+        ksort($drop);
+
+        $kept = [];
+
+        foreach ($lines as $index => $line) {
+            if (! isset($drop[$index])) {
+                $kept[] = $line;
+            }
+        }
+
+        return [$this->joinLines($kept, $this->eol($contents)), $removed];
     }
 
     /**

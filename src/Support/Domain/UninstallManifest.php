@@ -43,7 +43,7 @@ class UninstallManifest
     public const SCHEMA = 'domain-uninstall/v1';
 
     /** @var list<string> */
-    private const EDIT_KEYS = ['file', 'op', 'match', 'begin'];
+    private const EDIT_KEYS = ['file', 'op', 'match', 'begin', 'begins'];
 
     public function __construct(
         private DomainManager $domains,
@@ -256,8 +256,13 @@ class UninstallManifest
             $findings[] = "{$label}.match must be a non-empty regex string for [{$op}]";
         }
 
-        if ($op === 'remove_block' && (! is_string($edit['begin'] ?? null) || $edit['begin'] === '')) {
-            $findings[] = "{$label}.begin must be a non-empty anchor for [{$op}]";
+        if ($op === 'remove_block') {
+            $hasBegin = is_string($edit['begin'] ?? null) && $edit['begin'] !== '';
+            $hasBegins = $this->isStringList($edit['begins'] ?? null);
+
+            if ($hasBegin === $hasBegins) {
+                $findings[] = "{$label} needs exactly one of `begin` (one anchor) or `begins` (one anchor per entry) for [{$op}]";
+            }
         }
 
         return $findings;
