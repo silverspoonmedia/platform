@@ -86,8 +86,19 @@ class EnvironmentBackupManager
         }
 
         $safeOperation = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $operation);
-        $id = trim($safeOperation, '-').'-'.time();
-        $directory = $this->pendingRoot().DIRECTORY_SEPARATOR.$id;
+        $prefix = trim($safeOperation, '-').'-'.time();
+        $root = $this->pendingRoot();
+
+        // Two backups of the same operation inside one second must not collide:
+        // claim a fresh id against the directory itself, not a timestamp guess.
+        $sequence = 0;
+
+        do {
+            $id = $sequence === 0 ? $prefix : $prefix.'-'.$sequence;
+            $directory = $root.DIRECTORY_SEPARATOR.$id;
+            $sequence++;
+        } while (File::isDirectory($directory));
+
         $filesDir = $directory.DIRECTORY_SEPARATOR.'files';
 
         File::makeDirectory($filesDir, recursive: true);

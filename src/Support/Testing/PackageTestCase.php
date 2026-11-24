@@ -409,7 +409,7 @@ class PackageTestCase extends TestbenchTestCase
         }
 
         if ($app['config']->get('localization.supported_locales') === null) {
-            $app['config']->set('localization.supported_locales', ['en', 'id', 'ja', 'ko', 'zh_CN', 'ar', 'ru']);
+            $app['config']->set('localization.supported_locales', ['en', 'id']);
             $app['config']->set('localization.fallback_locale', 'en');
         }
 
