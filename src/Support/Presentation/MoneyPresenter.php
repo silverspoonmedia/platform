@@ -47,9 +47,11 @@ final class MoneyPresenter
             }
         }
 
+        // `intl` is optional: without it the two supported locales are formatted by
+        // hand. `id` swaps the separators (1.234,56); every other locale — `en`
+        // today, and any locale added later — uses the dot decimal.
         return match ($locale) {
             'id' => number_format($amount, self::DECIMALS, ',', '.'),
-            'ja' => number_format($amount, self::DECIMALS, '.', ','),
             default => number_format($amount, self::DECIMALS, '.', ','),
         };
     }

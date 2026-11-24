@@ -29,9 +29,10 @@ final class FxPresenter
             }
         }
 
+        // Same fallback as `MoneyPresenter`: `id` swaps the separators, every other
+        // locale uses the dot decimal. `intl` is optional, so this path runs.
         $formatted = match ($locale) {
             'id' => number_format($value, self::MAX_DECIMALS, ',', '.'),
-            'ja' => number_format($value, self::MAX_DECIMALS, '.', ','),
             default => number_format($value, self::MAX_DECIMALS, '.', ','),
         };
 
