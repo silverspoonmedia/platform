@@ -586,7 +586,11 @@ class UninstallFileEditor
      */
     private function splitLines(string $contents): array
     {
-        return preg_split('/\R/', $contents) ?: [];
+        // Explicit alternation, never `\R`: without `/u` the PCRE newline class
+        // treats the NEL byte (0x85) as a line break, and 0x85 is a UTF-8
+        // continuation byte — splitting a localized line mid-character and
+        // rejoining it turns the locale pack into mojibake.
+        return preg_split('/\r\n|\n|\r/', $contents) ?: [];
     }
 
     /**

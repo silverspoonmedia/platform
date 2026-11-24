@@ -572,6 +572,7 @@ class DomainManager
         foreach (array_unique([
             $this->apiRoutePath($name),
             base_path('routes/api/v1/'.$this->slug($name).'.php'),
+            base_path('routes/api/v1/admin-'.$this->slug($name).'.php'),
             base_path('routes/api/'.$this->slug($name).'.php'),
         ]) as $routeFile) {
             if (File::isFile($routeFile)) {
@@ -791,13 +792,21 @@ class DomainManager
     public function unregisterDomainSeeder(string $name): void
     {
         $short = $this->roleSeederShortClass($name);
+        $slug = $this->slug($name);
         $path = database_path('seeders/DatabaseSeeder.php');
 
         if (! File::isFile($path)) {
             return;
         }
 
+        // The role ladder seeder, plus any `{Name}CatalogSeeder` the product
+        // registered (and its `use` import). Missing one leaves the seeder
+        // calling a class whose file the removal deleted — a fatal on the next
+        // `db:seed` or `migrate --seed`.
         $this->removeLinesContaining($path, "\$this->call({$short}::class);");
+        $this->removeLinesContaining($path, "\$this->call({$name}CatalogSeeder::class);");
+        $this->removeLinesContaining($path, "use App\\Domain\\{$name}\\Database\\Seeders\\{$name}CatalogSeeder;");
+        $this->removeLinesContaining($path, "use App\\Domain\\{$name}\\Database\\Seeders\\{$short};");
     }
 
     public function unregisterApiRequires(string $name): void
@@ -807,17 +816,24 @@ class DomainManager
 
         $v1 = base_path('routes/api/v1.php');
         if (File::isFile($v1)) {
+            // Both require lines a domain can own: the public loader and the
+            // admin one `domain:make` appends. Dropping only the first leaves a
+            // require of a deleted file, and the next boot fatals on it.
             $this->removeLinesContaining($v1, "require __DIR__.'/v1/{$slug}.php';");
+            $this->removeLinesContaining($v1, "require __DIR__.'/v1/admin-{$slug}.php';");
         }
     }
 
     public function unregisterWebRequire(string $name): void
     {
         $slug = $this->slug($name);
-        $this->removeLinesContaining(
-            base_path('routes/web.php'),
-            "require __DIR__.'/web/{$slug}.php';"
-        );
+        $path = base_path('routes/web.php');
+
+        // Both shapes a product can register: the plain web loader and the
+        // public-surface one (`routes/web/{slug}-public.php`, OAuth/share-style
+        // endpoints). Neither may survive the file it requires.
+        $this->removeLinesContaining($path, "require __DIR__.'/web/{$slug}.php';");
+        $this->removeLinesContaining($path, "require __DIR__.'/web/{$slug}-public.php';");
     }
 
     public function stripBootstrapDiscoveries(string $name): void
