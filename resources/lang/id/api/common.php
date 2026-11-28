@@ -42,4 +42,10 @@ return [
     'core_hub_identity_synced' => 'Snapshot identitas diterapkan.',
     // curated at 2026-11-28T10:55:00+07:00 — id core hub wave
     'core_hub_entitlement_synced' => 'Snapshot hak akses diterapkan.',
+    // curated at 2026-11-28T10:55:00+07:00 — id core hub wave
+    'core_hub_identity_read' => 'Snapshot identitas diambil.',
+    // curated at 2026-11-28T10:55:00+07:00 — id core hub wave
+    'core_hub_entitlement_read' => 'Snapshot hak akses diambil.',
+    // curated at 2026-11-28T10:55:00+07:00 — id core hub wave
+    'core_hub_gateway_read' => 'Status gateway diambil.',
 ];

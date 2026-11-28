@@ -124,6 +124,38 @@ class DomainManager
     }
 
     /**
+     * Taxonomy: a domain whose source of truth this install *serves* rather than
+     * consumes. Only a core hub declares one; a consumer leaves it out.
+     *
+     * Hub-owned domains keep `kind => core` (PLATFORM_CORE is pinned, so no
+     * config edit can make them removable) and add `'hub' => true`, which is the
+     * flag `domain:list` prints and a hub-only route gate reads.
+     */
+    public function isHub(string $name): bool
+    {
+        $name = $this->normalizeName($name);
+        $entry = $this->all()[$name] ?? null;
+
+        return is_array($entry) && ($entry['hub'] ?? false) === true;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function hubNames(): array
+    {
+        $names = [];
+
+        foreach ($this->all() as $name => $meta) {
+            if (($meta['hub'] ?? false) === true) {
+                $names[] = (string) $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
      * Product removal lock from config. Core domains are never "locked" (use isPlatformCore).
      */
     public function isLocked(string $name): bool

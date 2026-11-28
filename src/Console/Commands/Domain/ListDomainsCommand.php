@@ -20,7 +20,7 @@ class ListDomainsCommand extends Command
         foreach ($domains->all() as $name => $meta) {
             $rows[] = [
                 $name,
-                $domains->kind($name),
+                $domains->kind($name).($domains->isHub($name) ? ' (hub)' : ''),
                 $meta['parent'] ?? '—',
                 $domains->removalStatus($name),
                 $domains->directoryExists($name) ? 'yes' : 'missing',
@@ -36,7 +36,7 @@ class ListDomainsCommand extends Command
         }
 
         $this->table(['Domain', 'Kind', 'Parent', 'Removal', 'Source', 'Package', 'Slug'], $rows);
-        $this->line('Kind: <info>core</info> = foundation (never removable); <info>product</info> = SaaS surface.');
+        $this->line('Kind: <info>core</info> = foundation (never removable); <info>product</info> = SaaS surface; <info>(hub)</info> = this install is the source of truth for it.');
         $this->line('Parent: <info>product domain this one extends</info> (subproduct) — <info>—</info> = none.');
         $this->line('Removal: <info>never</info> = platform core; <info>locked</info> = unlock via config/domains.php; <info>removable</info> = domain:remove allowed.');
         $this->line('Package: <info>package</info> = Composer path package under packages/; <info>—</info> = in app/Domain/.');

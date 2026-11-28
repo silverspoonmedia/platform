@@ -24,4 +24,7 @@ return [
     'core_hub_receiver_absent' => 'This service does not accept hub pushes.',
     'core_hub_identity_synced' => 'Identity snapshot applied.',
     'core_hub_entitlement_synced' => 'Entitlement snapshot applied.',
+    'core_hub_identity_read' => 'Identity snapshot retrieved.',
+    'core_hub_entitlement_read' => 'Entitlement snapshot retrieved.',
+    'core_hub_gateway_read' => 'Gateway status retrieved.',
 ];
