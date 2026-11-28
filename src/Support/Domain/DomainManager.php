@@ -334,33 +334,6 @@ class DomainManager
     }
 
     /**
-     * The kernel's machine surface: `routes/kernel-core-hub.php`.
-     *
-     * Deliberately excluded from {@see packageApiRoutePaths()}: that loader is
-     * mounted under `api/v1` with browser middleware (SPA marker, JWT cookie,
-     * CSRF), and this file is the opposite — a shared-secret push from a core
-     * hub. One file, one mount point, resolved through the install directory so
-     * the monolith and a consumer install find the same path.
-     */
-    public function coreHubRoutePath(): string
-    {
-        // The package's own directory first: under Testbench (and a consumer that
-        // symlinks the install) `base_path()` is not the checkout, so a `vendor/`
-        // probe is only a fallback for an install that really moved the file.
-        $local = dirname(__DIR__, 3).'/routes/kernel-core-hub.php';
-
-        if (is_file($local)) {
-            return $local;
-        }
-
-        $platform = $this->packageRootPath('silverspoonmedia/platform');
-
-        return $platform !== null
-            ? $platform.'/routes/kernel-core-hub.php'
-            : base_path('routes/internal/v1/core-hub.php');
-    }
-
-    /**
      * Route files owned by packaged core domains, in core-first registry order.
      *
      * The loader in routes/api/v1.php requires these instead of hardcoding a path
@@ -396,11 +369,6 @@ class DomainManager
 
         if ($platform !== null) {
             foreach (glob($platform.'/routes/kernel-*.php') ?: [] as $kernelRoute) {
-                // The hub's machine surface is not browser traffic: it is mounted
-                // under its own throttle by `coreHubRoutePath()`, never here.
-                if (basename($kernelRoute) === 'kernel-core-hub.php') {
-                    continue;
-                }
                 $paths[] = $kernelRoute;
             }
         }

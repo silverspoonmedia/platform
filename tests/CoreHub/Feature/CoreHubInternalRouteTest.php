@@ -43,7 +43,7 @@ class CoreHubInternalRouteTest extends PackageTestCase
         // `throttle:internal` is registered in the host's `bootstrap/app.php`;
         // Testbench has no rate limiter of that name, so the group mounts with
         // the route file's own middleware only.
-        $path = app(\App\Support\Domain\DomainManager::class)->coreHubRoutePath();
+        $path = dirname(__DIR__, 3).'/routes/core-hub.php';
 
         $router->group([], function ($router) use ($path): void {
             require $path;
