@@ -43,6 +43,7 @@ class KernelConfigSelfSufficiencyTest extends PackageTestCase
         'services',
         'hcaptcha',
         'storage',
+        'core_hub',
     ];
 
     /**

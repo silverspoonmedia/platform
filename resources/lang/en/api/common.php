@@ -18,4 +18,10 @@ return [
     'spa_csrf_issued' => 'CSRF token issued.',
     'spa_csrf_mismatch' => 'CSRF token mismatch.',
     'too_many_requests' => 'Too many requests. Please slow down and try again.',
+    'core_hub_unreachable' => 'The core hub could not be reached. Showing the last synced data.',
+    'core_hub_signature_invalid' => 'The hub signature is missing or invalid.',
+    'core_hub_malformed_payload' => 'The hub sent a payload this service cannot read.',
+    'core_hub_receiver_absent' => 'This service does not accept hub pushes.',
+    'core_hub_identity_synced' => 'Identity snapshot applied.',
+    'core_hub_entitlement_synced' => 'Entitlement snapshot applied.',
 ];

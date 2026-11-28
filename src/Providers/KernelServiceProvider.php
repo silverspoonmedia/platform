@@ -9,6 +9,7 @@ use App\Repositories\Eloquent\EloquentCrudRepository;
 use App\Support\Ai\AiUsageConsolidatorRegistry;
 use App\Support\Billing\FulfillmentRegistry;
 use App\Support\Broadcasting\ChannelRegistrarRegistry;
+use App\Support\CoreHub\CoreHubRegistry;
 use App\Support\Encryption\LegacyColumnMigratorRegistry;
 use App\Support\Http\AllowlistCorsService;
 use App\Support\Navigation\MenuContributorRegistry;
@@ -56,6 +57,12 @@ class KernelServiceProvider extends ServiceProvider
         // of the kernel reading the product's own config group.
         $this->mergeConfigFrom(__DIR__.'/../../config/storage.php', 'storage');
 
+        // Core-hub transport: the kernel ships the client contract and the
+        // internal signature policy, never a hub URL. A consumer publishes its
+        // `core_hub.*` values and binds a client; a host without one boots the
+        // same and every `bound()` guard answers "no hub".
+        $this->mergeConfigFrom(__DIR__.'/../../config/core_hub.php', 'core_hub');
+
         // Kernel-owned registries: a packaged domain publishes seams into these
         // from its own provider, so neither the kernel nor a package imports the
         // other's classes. Singleton is correct — they are pure registration
@@ -74,6 +81,7 @@ class KernelServiceProvider extends ServiceProvider
         $this->singletonOnce(AiUsageConsolidatorRegistry::class);
         $this->singletonOnce(SettingCatalog::class);
         $this->singletonOnce(MenuContributorRegistry::class);
+        $this->singletonOnce(CoreHubRegistry::class);
 
         if (! $this->app->bound(EloquentCrudRepositoryInterface::class)) {
             $this->app->bind(EloquentCrudRepositoryInterface::class, EloquentCrudRepository::class);

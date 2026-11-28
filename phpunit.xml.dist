@@ -8,6 +8,7 @@
     <testsuites>
         <testsuite name="platform">
             <directory>tests/Identity</directory>
+            <directory>tests/CoreHub</directory>
         </testsuite>
     </testsuites>
     <source>
